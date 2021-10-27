@@ -69,32 +69,28 @@ def sampleFromData(country_name, num_train):
     lst_data.append((test_data['Name'].values[0], test_data['Country'].values[0]))
     return lst_data
 
-def letsgo(country_name, num_train):
+def dataCollection(country_name, num_train, result_lst):
     lst_train = sampleFromData(country_name, num_train)
     #One-shot Learning
     if num_train == 1:
         prompt = createPrompt_1(lst_train[0][0], lst_train[0][1], lst_train[1][0])
         test_country = lst_train[1][1]
 
-        print(prompt)
-        print(test_country)
-        response = queryAPI(prompt)
-        print(response)
-
     #Two-shot Learning
     if num_train == 2:
         prompt = createPrompt_2(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0])
         test_country = lst_train[2][1]
 
-        print(prompt)
-        print(test_country)
-        response = queryAPI(prompt)
-        print(response)
-
     #Three-shot Learning
     if num_train == 3:
-        createPrompt_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
+        prompt = createPrompt_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
         test_country = lst_train[3][1]
+    
+    train_country = lst_train[0][1]
+    response = queryAPI(prompt)
+
+    #Tuples of ('Given Country', 'Response', 'Real Country')
+    result_lst.append((train_country, response, test_country))
 
 def createPrompt_1(train_name1, train_country1, test_name):
     prompt = f'''Input: {train_name1}
@@ -140,12 +136,19 @@ def createPrompt_3(train_name1, train_country1, train_name2, train_country2, tra
 
 
 def testFunc():
-    letsgo('USA', 1)
+    dataCollection('USA', 1)
 
 if __name__ == "__main__":
     #df = loadData('USA')
-    lst_countries = ['France', 'India', 'Sierra_Leone', 'Singapore', 'USA']
     BATCH_SIZE = 100
-    for i in range(BATCH_SIZE):
-        letsgo(random.choice(lst_countries), 2)
-        time.sleep(3)
+    lst_countries = ['France', 'India', 'Sierra_Leone', 'Singapore', 'USA']
+    
+    while(True):
+        result_lst = []
+        ITERATION = 1
+        for i in range(BATCH_SIZE):
+            dataCollection(random.choice(lst_countries), 2, result_lst)
+            time.sleep(3)
+        df = pd.DataFrame(result_lst, columns=['Given_Country', 'Response', 'Real_Country'])
+        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Arman_BATCH_{ITERATION}.csv')
+        ITERATION += 1
