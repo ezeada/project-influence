@@ -8,44 +8,136 @@
 import requests
 import pandas as pd
 import json
+import random 
 
-res = requests.post("https://api.ai21.com/studio/v1/j1-jumbo/complete", 
-headers={"Authorization" : "Bearer ZPtVIXs3vcoKAd85YI5OSRlqJOtSfIpU"},
-json={
-    "prompt" : "Input: Alex \n Name: Alex \n Country: USA \n Input: Jawi \n Name: Jawi \n Country: USA \n Input: Arman \n Name: Arman \n Country: ",
-    "numResults" : 1,
-    "maxTokens" : 5,
-    # Higher temperature means greater sampling
-    # temperature = 0 means, output the value with the highest probability
-    "temperature" : 0
-})
+train_name = 'Alex'
+train_country = 'USA'
+test_name = 'Arman'
+prompt = f'''Input: {train_name}
+Name: {train_name}
+Country: {train_country}
 
+Input: {test_name}
+Name: {test_name}
+Country:'''
 
+#Personal File System (pwd your Datasets in Terminal)
+#path = "/mnt/c/Git/project-influence/Datasets/France.xlsx"
 
-data = res.json()
-completions = data["completions"][0]
-id = data["id"]
+def queryAPI(prompt):
+    res = requests.post("https://api.ai21.com/studio/v1/j1-jumbo/complete", 
+    headers={"Authorization" : "Bearer ZPtVIXs3vcoKAd85YI5OSRlqJOtSfIpU"},
+    json={
+        "prompt" : prompt,
+        "numResults" : 1,
+        "maxTokens" : 1,
+        "topKReturn" : 10,
+        # Higher temperature means greater sampling
+        # temperature = 0 means, output the value with the highest probability
+        "temperature" : 0
+    })
 
-with open('GeneratedData/data.json', 'w') as f:
-    json.dump(data, f, ensure_ascii=False)
+    data = res.json()
+    completions = data["completions"][0]
+    tokens = [t['generatedToken']['token'] for t in data['completions'][0]['data']['tokens']]
+    response = ''.join(tokens).replace('_', ' ').replace("<|newline|>", '\n')
+    id = data["id"]
+    
+    print(response)
+    print(id)
 
-with open('GeneratedData/completions.json', 'w') as f:
-    json.dump(completions, f, ensure_ascii=False)
+    with open('Language_Model_Responses/data.json', 'w') as f:
+        json.dump(data, f, ensure_ascii=False)
 
-print(id)
-print(completions["data"]["text"])
+    with open('Language_Model_Responses/completions.json', 'w') as f:
+        json.dump(completions, f, ensure_ascii=False)
 
+def loadData(country_name, isAll=False):
+    if isAll:
+        lst_dfs = []
+        lst_countries = ['France', 'India', 'Sierra_Leone', 'Singapore', 'USA']
+        for country in lst_countries:
+            lst_dfs.append(pd.read_excel(f"/mnt/c/Git/project-influence/Datasets/{country}.xlsx", usecols='A,B'))
+        return pd.concat(lst_dfs)
 
-## CODE ON DOCUMENTATION
-# >>> res = requests.post("...", json={"prompt": "This is the 1st line\nThis is the 2nd line", 
-#                                      "temperature": 0, "maxTokens": 16})
-# >>> res.status_code
-# 200
-# >>> data = res.json()
-# >>> data['completions'][0]['data']['text']
-# '\nThis is the 3rd line\nThis is the 4th line\nThis is the 5th line\n'
-# >>> tokens = [t['generatedToken']['token'] for t in data['completions'][0]['data']['tokens']]
-# >>> "".join(tokens)
-# '<|newline|>▁This▁is▁the▁3rd▁line<|newline|>▁This▁is▁the▁4th▁line<|newline|>▁This▁is▁the▁5th▁line<|newline|>'
-# >>> "".join(tokens).replace("▁"," ").replace("<|newline|>", "\n")
-# '\n This is the 3rd line\n This is the 4th line\n This is the 5th line\n'
+    else:
+        path = f"/mnt/c/Git/project-influence/Datasets/{country_name}.xlsx"
+        return pd.read_excel(path, usecols='A,B') 
+
+def sampleFromData(country_name, num_train):
+    lst_data = []
+    df_country = loadData(country_name)
+    df_all = loadData(country_name, True)
+    for i in range(num_train):
+        train_name = df_country.sample(replace=True)['Name']
+        lst_data.append((train_name, country_name))
+    test_name = df_all.sample(replace=True)['Name']
+    return lst_data
+
+def letsgo(country_name, num_train):
+    lst_train = sampleFromData(country_name, num_train)
+    #One-shot Learning
+    if num_train == 1:
+        prompt = createPrompt_1(lst_train[0][0], lst_train[0][1], lst_train[1][0])
+        test_country = lst_train[1][1]
+
+    #Two-shot Learning
+    if num_train == 2:
+        prompt = createPrompt_2(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0])
+        test_country = lst_train[2][1]
+
+    #Three-shot Learning
+    if num_train == 3:
+        createPrompt_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
+        test_country = lst_train[3][1]
+
+def createPrompt_1(train_name1, train_country1, test_name):
+    prompt = f'''Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_2(train_name1, train_country1, train_name2, train_country2, test_name):
+    prompt = f'''Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_name2}
+    Country: {train_country2}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_3(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, test_name):
+    prompt = f'''Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_name2}
+    Country: {train_country2}
+
+    Input: {train_name3}
+    Name: {train_name3}
+    Country: {train_country3}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+if __name__ == "__main__":
+    df = loadData('USA')
+    print(df.size)
+    print(df.tail())
+    idx = 0
+    # while(idx != 30):
+    #     queryAPI(prompt, idx)
+    #     sleep(3)
