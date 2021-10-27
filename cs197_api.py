@@ -150,4 +150,5 @@ if __name__ == "__main__":
             time.sleep(3)
         df = pd.DataFrame(result_lst, columns=['Given_Country', 'Response', 'Real_Country'])
         df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Arman_BATCH_{ITERATION}.csv')
+        print(f"Completed Iteration: {ITERATION}")
         ITERATION += 1
