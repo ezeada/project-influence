@@ -143,13 +143,9 @@ def testFunc():
     letsgo('USA', 1)
 
 if __name__ == "__main__":
-    testFunc()
     #df = loadData('USA')
-    #print(df.size)
-    #print(df.tail())
-    # BATCH_SIZE = 100
-    # for i in range BATCH_SIZE:
-    #     idx = 0
-    # while(idx != 30):
-    #     queryAPI(prompt, idx)
-    #     sleep(3)
+    lst_countries = ['France', 'India', 'Sierra_Leone', 'Singapore', 'USA']
+    BATCH_SIZE = 100
+    for i in range(BATCH_SIZE):
+        letsgo(random.choice(lst_countries), 2)
+        time.sleep(3)
