@@ -9,6 +9,7 @@
 import requests
 import pandas as pd
 import json
+import numpy as np
 import time
 import random 
 
@@ -29,21 +30,24 @@ def queryAPI(prompt):
     })
 
     data = res.json()
-    tokens = [t['generatedToken']['token'] for t in data['completions'][0]['data']['tokens']]
-    response = ''.join(tokens).replace("<|newline|>", '\n').replace('_', ' ')
+    ## The response here is already given with probability in topTokens -- Redundant
+    #tokens = [t['generatedToken']['token'] for t in data['completions'][0]['data']['tokens']]
+    #response = ''.join(tokens).replace("<|newline|>", '\n').replace('_', ' ')
+    #probabilities = [t['generatedToken']['logprob'] for t in data['completions'][0]['data']['tokens']]
     id = data["id"]
-    
-    #print(response)
-    #print(id)
+    topK_completions = [t['topTokens'] for t in data['completions'][0]['data']['tokens']]
 
-    #response is in the form '_response'
-    return(response[1:])
+    response_dict = {}
+    for tt in topK_completions[0]:
+        tokens = tt['token']
+        response = ''.join(tokens).replace("<|newline|>", '\n').replace('_', ' ')
+        probability = np.exp(tt['logprob'])
+        print((response, probability))
 
-    #with open('Language_Model_Responses/data.json', 'w') as f:
-    #    json.dump(data, f, ensure_ascii=False)
+        # response is originally in the form '_response'
+        response_dict[response[1:]] = probability
 
-    #with open('Language_Model_Responses/completions.json', 'w') as f:
-    #    json.dump(completions, f, ensure_ascii=False)
+    return(response_dict)
 
 def loadData(country_name, isAll=False):
     if isAll:
@@ -85,12 +89,37 @@ def dataCollection(country_name, num_train, result_lst):
     if num_train == 3:
         prompt = createPrompt_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
         test_country = lst_train[3][1]
-    
-    train_country = lst_train[0][1]
-    response = queryAPI(prompt)
 
-    #Tuples of ('Given Country', 'Response', 'Real Country')
-    result_lst.append((train_country, response, test_country))
+    #Four-shot Learning
+    if num_train == 4:
+        prompt = createPrompt_4(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0])
+        test_country = lst_train[4][1]
+
+    #Five-shot Learning
+    if num_train == 5:
+        prompt = createPrompt_5(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0], lst_train[4][1], lst_train[5][0])
+        test_country = lst_train[5][1]
+    
+    ## TODO: Model assumes that all samples in the training is from the same country
+    train_country = lst_train[0][1]
+    response_dict = queryAPI(prompt)
+
+    #test_country is irrelevant -- kept for future use
+    
+    response_lst = [train_country]
+    for key, value in response_dict.items():
+        response_lst.append(key)
+        response_lst.append(value)
+
+    result_lst.append(response_lst)
+
+def createColumns(topKReturn = 10):
+    column_names = ['Given Country']
+    for i in range(1, topKReturn + 1):
+        column_names.append(f"Completion {i}")
+        column_names.append(f"Probability {i}")
+    return column_names
+
 
 def createPrompt_1(train_name1, train_country1, test_name):
     prompt = f'''Input: {train_name1}
@@ -134,21 +163,72 @@ def createPrompt_3(train_name1, train_country1, train_name2, train_country2, tra
     Country:'''
     return prompt
 
+def createPrompt_4(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, train_name4, train_country4, test_name):
+    prompt = f'''Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_name2}
+    Country: {train_country2}
+
+    Input: {train_name3}
+    Name: {train_name3}
+    Country: {train_country3}
+
+    Input: {train_name4}
+    Name: {train_name4}
+    Country: {train_country4}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_5(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, train_name4, train_country4, train_name5, train_country5, test_name):
+    prompt = f'''Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_name2}
+    Country: {train_country2}
+
+    Input: {train_name3}
+    Name: {train_name3}
+    Country: {train_country3}
+
+    Input: {train_name4}
+    Name: {train_name4}
+    Country: {train_country4}
+
+    Input: {train_name5}
+    Name: {train_name5}
+    Country: {train_country5}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
 # def testFunc():
-#     dataCollection('USA', 1)
+#     empty_lst = []
+#     dataCollection('USA', 1, empty_lst)
 
 if __name__ == "__main__":
-    BATCH_SIZE = 100
+    BATCH_SIZE = 10
     ITERATION = 1
+    TOPKRETURN = 10
     lst_countries = ['France', 'India', 'Sierra_Leone', 'Singapore', 'USA']
     
     while(True):
         result_lst = []
+        column_names = createColumns(TOPKRETURN)
         
         for i in range(BATCH_SIZE):
             dataCollection(random.choice(lst_countries), 2, result_lst)
             time.sleep(3)
-        df = pd.DataFrame(result_lst, columns=['Given_Country', 'Response', 'Real_Country'])
-        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Arman_BATCH_{ITERATION}.csv')
+        df = pd.DataFrame(result_lst, columns=column_names)
+        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Arman_BATCH_WITH_PROB{ITERATION}.csv')
         print(f"Completed Iteration: {ITERATION}")
         ITERATION += 1
