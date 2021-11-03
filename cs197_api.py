@@ -217,7 +217,7 @@ def createPrompt_5(train_name1, train_country1, train_name2, train_country2, tra
 
 if __name__ == "__main__":
     BATCH_SIZE = 100
-    ITERATION = 13
+    ITERATION = 1
     TOPKRETURN = 10
     lst_countries = ['France', 'India', 'Sierra_Leone', 'Singapore', 'USA']
     
@@ -226,9 +226,9 @@ if __name__ == "__main__":
         column_names = createColumns(TOPKRETURN)
         
         for i in range(BATCH_SIZE):
-            dataCollection(random.choice(lst_countries), 2, result_lst)
+            dataCollection(random.choice(lst_countries), 4, result_lst)
             time.sleep(3)
         df = pd.DataFrame(result_lst, columns=column_names)
-        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Arman_BATCH_WITH_PROB{ITERATION}.csv')
+        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Four_Shot_Data/Arman_BATCH_WITH_PROB{ITERATION}.csv')
         print(f"Completed Iteration: {ITERATION}")
         ITERATION += 1
