@@ -234,7 +234,7 @@ def createPrompt_5(train_name1, train_country1, train_name2, train_country2, tra
 
 def createPrompt_taskDescription_0(train_country1, test_name):
     prompt = f'''
-    Create entries for people in the {train_country1}
+    Create entries for people in {train_country1}
 
     Input: {test_name}
     Name: {test_name}
@@ -243,7 +243,7 @@ def createPrompt_taskDescription_0(train_country1, test_name):
 
 def createPrompt_taskDescription_1(train_name1, train_country1, test_name):
     prompt = f'''
-    Create entries for people in the {train_country1}
+    Create entries for people in {train_country1}
 
     Input: {train_name1}
     Name: {train_name1}
@@ -256,7 +256,7 @@ def createPrompt_taskDescription_1(train_name1, train_country1, test_name):
 
 def createPrompt_taskDescription_2(train_name1, train_country1, train_name2, train_country2, test_name):
     prompt = f'''
-    Create entries for people in the {train_country1}
+    Create entries for people in {train_country1}
 
     Input: {train_name1}
     Name: {train_name1}
@@ -273,7 +273,7 @@ def createPrompt_taskDescription_2(train_name1, train_country1, train_name2, tra
 
 def createPrompt_taskDescription_3(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, test_name):    
     prompt = f'''
-    Create entries for people in the {train_country1}
+    Create entries for people in {train_country1}
 
     Input: {train_name1}
     Name: {train_name1}
@@ -294,7 +294,7 @@ def createPrompt_taskDescription_3(train_name1, train_country1, train_name2, tra
 
 def createPrompt_taskDescription_4(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, train_name4, train_country4, test_name):
     prompt = f'''
-    Create entries for people in the {train_country1}
+    Create entries for people in {train_country1}
 
     Input: {train_name1}
     Name: {train_name1}
@@ -319,7 +319,7 @@ def createPrompt_taskDescription_4(train_name1, train_country1, train_name2, tra
 
 def createPrompt_taskDescription_5(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, train_name4, train_country4, train_name5, train_country5, test_name):
     prompt = f'''
-    Create entries for people in the {train_country1}
+    Create entries for people in {train_country1}
 
     Input: {train_name1}
     Name: {train_name1}
