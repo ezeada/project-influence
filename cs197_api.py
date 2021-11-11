@@ -361,9 +361,9 @@ if __name__ == "__main__":
         column_names = createColumns(TOPKRETURN)
         
         for i in range(BATCH_SIZE):
-            dataCollection(random.choice(lst_countries), 2, result_lst, True)
+            dataCollection(random.choice(lst_countries), 4, result_lst, True)
             time.sleep(3)
         df = pd.DataFrame(result_lst, columns=column_names)
-        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Two_Shot_Task_Description_Data/Arman_BATCH_WITH_PROB{ITERATION}.csv')
+        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Four_Shot_Task_Description_Data/Arman_BATCH_WITH_PROB{ITERATION}.csv')
         print(f"Completed Iteration: {ITERATION}")
         ITERATION += 1
