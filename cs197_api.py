@@ -73,34 +73,55 @@ def sampleFromData(country_name, num_train):
     lst_data.append((test_data['Name'].values[0], test_data['Country'].values[0]))
     return lst_data
 
-def dataCollection(country_name, num_train, result_lst):
+def dataCollection(country_name, num_train, result_lst, isTaskDescribed = False):
     lst_train = sampleFromData(country_name, num_train)
+    
+    #Zero-shot Learning (Task Described Prompts)
+    if num_train == 0:
+        lst_train = sampleFromData(country_name, 1)
+        prompt = createPrompt_taskDescription_0(lst_countries[0][1], lst_train[1][0])
+        test_country = lst_train[1][1]
+    
     #One-shot Learning
     if num_train == 1:
-        prompt = createPrompt_1(lst_train[0][0], lst_train[0][1], lst_train[1][0])
+        if isTaskDescribed:
+            prompt = createPrompt_taskDescription_1(lst_train[0][0], lst_train[0][1], lst_train[1][0])
+        else:
+            prompt = createPrompt_1(lst_train[0][0], lst_train[0][1], lst_train[1][0])
         test_country = lst_train[1][1]
 
     #Two-shot Learning
     if num_train == 2:
-        prompt = createPrompt_2(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0])
+        if isTaskDescribed:
+            prompt = createPrompt_taskDescription_2(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0])
+        else:
+            prompt = createPrompt_2(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0])
         test_country = lst_train[2][1]
 
     #Three-shot Learning
     if num_train == 3:
-        prompt = createPrompt_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
+        if isTaskDescribed:
+            prompt = createPrompt_taskDescription_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
+        else:
+            prompt = createPrompt_3(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0])
         test_country = lst_train[3][1]
 
     #Four-shot Learning
     if num_train == 4:
-        prompt = createPrompt_4(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0])
+        if isTaskDescribed:
+            prompt = createPrompt_taskDescription_4(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0])
+        else:
+            prompt = createPrompt_4(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0])
         test_country = lst_train[4][1]
 
     #Five-shot Learning
     if num_train == 5:
-        prompt = createPrompt_5(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0], lst_train[4][1], lst_train[5][0])
+        if isTaskDescribed:
+            prompt = createPrompt_taskDescription_5(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0], lst_train[4][1], lst_train[5][0])
+        else:
+            prompt = createPrompt_5(lst_train[0][0], lst_train[0][1], lst_train[1][0], lst_train[1][1], lst_train[2][0], lst_train[2][1], lst_train[3][0], lst_train[3][1], lst_train[4][0], lst_train[4][1], lst_train[5][0])
         test_country = lst_train[5][1]
     
-    ## TODO: Model assumes that all samples in the training is from the same country
     train_country = lst_train[0][1]
     response_dict = queryAPI(prompt)
 
@@ -211,6 +232,120 @@ def createPrompt_5(train_name1, train_country1, train_name2, train_country2, tra
     Country:'''
     return prompt
 
+def createPrompt_taskDescription_0(train_country1, test_name):
+    prompt = f'''
+    Create entries for people in the {train_country1}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_taskDescription_1(train_name1, train_country1, test_name):
+    prompt = f'''
+    Create entries for people in the {train_country1}
+
+    Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_taskDescription_2(train_name1, train_country1, train_name2, train_country2, test_name):
+    prompt = f'''
+    Create entries for people in the {train_country1}
+
+    Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_country2}
+    Country: {train_country2}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_taskDescription_3(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, test_name):    
+    prompt = f'''
+    Create entries for people in the {train_country1}
+
+    Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_country2}
+    Country: {train_country2}
+
+    Input: {train_name3}
+    Name: {train_country3}
+    Country: {train_country3}
+    
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_taskDescription_4(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, train_name4, train_country4, test_name):
+    prompt = f'''
+    Create entries for people in the {train_country1}
+
+    Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_country2}
+    Country: {train_country2}
+
+    Input: {train_name3}
+    Name: {train_country3}
+    Country: {train_country3}
+    
+    Input: {train_name4}
+    Name: {train_country4}
+    Country: {train_country4}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
+def createPrompt_taskDescription_5(train_name1, train_country1, train_name2, train_country2, train_name3, train_country3, train_name4, train_country4, train_name5, train_country5, test_name):
+    prompt = f'''
+    Create entries for people in the {train_country1}
+
+    Input: {train_name1}
+    Name: {train_name1}
+    Country: {train_country1}
+
+    Input: {train_name2}
+    Name: {train_name2}
+    Country: {train_country2}
+
+    Input: {train_name3}
+    Name: {train_name3}
+    Country: {train_country3}
+
+    Input: {train_name4}
+    Name: {train_name4}
+    Country: {train_country4}
+
+    Input: {train_name5}
+    Name: {train_name5}
+    Country: {train_country5}
+
+    Input: {test_name}
+    Name: {test_name}
+    Country:'''
+    return prompt
+
 # def testFunc():
 #     empty_lst = []
 #     dataCollection('USA', 1, empty_lst)
@@ -226,9 +361,9 @@ if __name__ == "__main__":
         column_names = createColumns(TOPKRETURN)
         
         for i in range(BATCH_SIZE):
-            dataCollection(random.choice(lst_countries), 4, result_lst)
+            dataCollection(random.choice(lst_countries), 2, result_lst, True)
             time.sleep(3)
         df = pd.DataFrame(result_lst, columns=column_names)
-        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Four_Shot_Data/Arman_BATCH_WITH_PROB{ITERATION}.csv')
+        df.to_csv(f'/mnt/c/Git/project-influence/Language_Model_Responses/Two_Shot_Task_Description_Data/Arman_BATCH_WITH_PROB{ITERATION}.csv')
         print(f"Completed Iteration: {ITERATION}")
         ITERATION += 1
