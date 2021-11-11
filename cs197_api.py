@@ -12,6 +12,36 @@ import json
 import numpy as np
 import time
 import random 
+import openai
+
+# Personal File System (pwd your Datasets in Terminal)
+# path = "/mnt/c/Git/project-influence/Datasets/France.xlsx"
+
+
+def openAiFunc(prompt):
+    openai.api_key = "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"
+    response = openai.Completion.create(
+        engine="davinci",
+        prompt=prompt,
+        temperature=0,
+        max_tokens=1,
+        top_p=1.0,
+        logprobs=10,
+        frequency_penalty=0.2,
+        presence_penalty=0.0,
+        stop=["\n"]
+    )
+    probs = response["choices"][0]["logprobs"]
+    logprobs = probs["top_logprobs"][0]
+    logprobs = dict(sorted(logprobs.items(), key=lambda item: item[1], reverse=True))
+    #token = probs["tokens"][0]
+
+    response_dict = {}
+    for country in logprobs:
+        response_dict[country[1:]] = np.exp(logprobs[country])
+    #print(response_dict)
+    #print(token)
+    return response_dict
 
 #Personal File System (pwd your Datasets in Terminal)
 #path = "/mnt/c/Git/project-influence/Datasets/France.xlsx"
